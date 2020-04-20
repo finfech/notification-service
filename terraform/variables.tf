@@ -9,3 +9,11 @@ variable "lambda_handler_name" {
 variable "lambda_filename" {
   default = "service.zip"
 }
+
+variable "ses_aws_region" {
+  type = string
+}
+
+variable "ses_sender_email" {
+  type = string
+}

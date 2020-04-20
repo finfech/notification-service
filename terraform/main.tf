@@ -21,13 +21,13 @@ resource "aws_lambda_function" "this" {
   handler       = var.lambda_handler_name
   role          = aws_iam_role.iam_for_lambda.arn
 
-
   source_code_hash = data.archive_file.code.output_base64sha256
   runtime          = "python3.8"
 
   environment {
     variables = {
-      foo = "bar"
+      AWS_REGION   = var.ses_aws_region
+      SENDER_EMAIL = var.ses_sender_email
     }
   }
 }
