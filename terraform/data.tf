@@ -22,10 +22,10 @@ data "aws_iam_policy_document" "this" {
     effect = "Allow"
     resources = ["arn:aws:ses:*"]
     actions = [
-      "SendEmail",
-      "SendRawEmail",
-      "SendTemplatedEmail",
-      "SendCustomVerificationEmail"
+      "ses:SendEmail",
+      "ses:SendRawEmail",
+      "ses:SendTemplatedEmail",
+      "ses:SendCustomVerificationEmail"
     ]
   }
 

@@ -54,6 +54,6 @@ def handler(event, context):
             Source=envs['SES_SENDER_EMAIL'],
         )
     except ClientError as ex:
-        return to_json(Error(str(ex)))
+        return to_json(Error(str(ex))._asdict())
 
     return ""
