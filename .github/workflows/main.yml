@@ -1,0 +1,20 @@
+on: [push, pull_request]
+name: Actions CI Workflow
+jobs:
+  "Test":
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v1
+        with:
+          python-version: "3.7" # Semantic version range syntax or exact version of a Python version
+          architecture: "x64" # Optional - x64 or x86, defaults to x64
+
+      - name: Display Python version
+        run: python -c "import sys; print(sys.version)"
+
+      - name: Test Service script
+        run: python -m unittest discover -p "*_test.py"
