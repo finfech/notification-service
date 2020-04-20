@@ -31,8 +31,8 @@ resource "aws_lambda_function" "this" {
 }
 
 resource "aws_lambda_event_source_mapping" "this" {
-  event_source_arn = "${aws_sqs_queue.request_notification_queue.arn}"
-  function_name    = "${aws_lambda_function.this.arn}"
+  event_source_arn = aws_sqs_queue.request_notification_queue.arn
+  function_name    = aws_lambda_function.this.arn
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
@@ -43,18 +43,22 @@ resource "aws_iam_role" "iam_for_lambda" {
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Action": [
-        "sqs.ReceiveMessage",
-        "sqs.DeleteMessage",
-        "sqs.GetQueueAttributes"
-      ],
+      "Effect": "Allow",
       "Principal": {
         "Service": "lambda.amazonaws.com"
       },
-      "Effect": "Allow",
-      "Sid": ""
+      "Action": "sts:AssumeRole"
     }
   ]
 }
 EOF
+}
+
+resource "aws_iam_role_policy_attachment" "example_lambda" {
+  policy_arn = aws_iam_policy.this.arn
+  role       = aws_iam_role.iam_for_lambda.name
+}
+
+resource "aws_iam_policy" "this" {
+  policy = data.aws_iam_policy_document.this.json
 }
