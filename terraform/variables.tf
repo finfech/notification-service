@@ -5,3 +5,7 @@ variable "lambda_function_name" {
 variable "lambda_handler_name" {
   default = "service.handler"
 }
+
+variable "lambda_filename" {
+  default = "service.zip"
+}

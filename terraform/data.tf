@@ -1,3 +1,9 @@
+data "archive_file" "code" {
+  type        = "zip"
+  source_file = "../service.py"
+  output_path = var.lambda_filename
+}
+
 data "aws_iam_policy_document" "this" {
   statement {
     sid       = "AllowSQSPermissions"

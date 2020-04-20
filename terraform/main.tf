@@ -17,10 +17,12 @@ resource "aws_sqs_queue" "request_notification_queue" {
 
 resource "aws_lambda_function" "this" {
   function_name = var.lambda_function_name
+  filename      = var.lambda_filename
   handler       = var.lambda_handler_name
   role          = aws_iam_role.iam_for_lambda.arn
 
-  source_code_hash = filebase64sha256("../service.py")
+
+  source_code_hash = data.archive_file.code.output_base64sha256
   runtime          = "python3.8"
 
   environment {
@@ -54,7 +56,7 @@ resource "aws_iam_role" "iam_for_lambda" {
 EOF
 }
 
-resource "aws_iam_role_policy_attachment" "example_lambda" {
+resource "aws_iam_role_policy_attachment" "this" {
   policy_arn = aws_iam_policy.this.arn
   role       = aws_iam_role.iam_for_lambda.name
 }
