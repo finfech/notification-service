@@ -3,11 +3,14 @@ import json
 from collections import namedtuple
 
 import boto3
+from botocore.exceptions import ClientError
 
 ALLOWED_TYPES = ['email']
+CHARSET = "UTF-8"
 
 
-RequestPayload = namedtuple('RequestPayload', ['type', 'to', 'subject'])
+RequestPayload = namedtuple(
+    'RequestPayload', ['type', 'to', 'subject', 'html', 'text'])
 Error = namedtuple('ApiError', 'msg')
 
 
@@ -31,6 +34,26 @@ def handler(event, context):
     if err:
         return to_json(err)
 
+    message_body = event['message']['Body']
+
+    try:
+        req_payload = RequestPayload(**message_body)
+    except TypeError as ex:
+        return to_json(Error('invalid request payload ' + str(ex))._asdict())
+
     client = boto3.client('ses', region_name=envs['SES_AWS_REGION'])
+    try:
+        client.send_email(
+            Destination={'ToAddresses': [req_payload.to]},
+            Message={
+                'Body': {
+                    'Html': {'Charset': CHARSET, 'Data': req_payload.html},
+                    'Text': {'Charset': CHARSET, 'Data': req_payload.text},
+                },
+                'Subject': {'Charset': CHARSET, 'Data': req_payload.subject}},
+            Source=envs['SES_SENDER_EMAIL'],
+        )
+    except ClientError as ex:
+        return to_json(Error(str(ex)))
 
     return ""
