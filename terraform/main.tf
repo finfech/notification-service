@@ -26,8 +26,8 @@ resource "aws_lambda_function" "this" {
 
   environment {
     variables = {
-      AWS_REGION   = var.ses_aws_region
-      SENDER_EMAIL = var.ses_sender_email
+      SES_AWS_REGION   = var.ses_aws_region
+      SES_SENDER_EMAIL = var.ses_sender_email
     }
   }
 }

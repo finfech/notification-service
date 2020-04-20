@@ -26,11 +26,11 @@ def handler(event, context):
 
         return res, None
 
-    required_envs = ['AWS_REGION', 'SENDER_EMAIL']
+    required_envs = ['SES_AWS_REGION', 'SES_SENDER_EMAIL']
     envs, err = get_envs(required_envs)
     if err:
         return to_json(err)
 
-    client = boto3.client('ses', region_name=envs['AWS_REGION'])
+    client = boto3.client('ses', region_name=envs['SES_AWS_REGION'])
 
     return ""
