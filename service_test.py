@@ -11,7 +11,7 @@ def to_json(obj):
 
 
 class HandlerUnitTest(TestCase):
-    def test_expected_return_error(self):
+    def test_expected_return_error_not_defined_aws_region_env(self):
         expected = to_json({"msg": "AWS_REGION is not defined on env"})
         actual = handler({}, None)
 
