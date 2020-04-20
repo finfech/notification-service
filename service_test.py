@@ -33,14 +33,14 @@ class HandlerUnitTest(TestCase):
         os.environ['SES_AWS_REGION'] = 'test'
 
         fake_event = {
-            'message': {
-                'Body': {
+            'Records': [{
+                'body': json.dumps({
                     'to': 'gyuhwan.a.kim@gmail.com',
                     'subject': "title",
                     'html': "fasdfasdf Hello html",
                     'text': "tthis is a text"
-                }
-            }
+                })
+            }]
         }
 
         expected = to_json(

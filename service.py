@@ -34,7 +34,7 @@ def handler(event, context):
     if err:
         return to_json(err)
 
-    message_body = event['message']['Body']
+    message_body = json.loads(event['Records'][0]['body'])
 
     try:
         req_payload = RequestPayload(**message_body)
