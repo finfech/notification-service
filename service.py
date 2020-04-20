@@ -15,14 +15,21 @@ def handler(event, context):
     def to_json(obj):
         return json.dumps(obj)
 
-    required_envs = ['AWS_REGION', 'SENDER_EMAIL']
+    def get_envs(required_envs):
+        res = dict()
+        for key in required_envs:
+            val = os.getenv(key)
+            if not val:
+                return None, Error(f'{key} is not defined on env')._asdict()
 
-    envs = dict()
-    for env in required_envs:
-        val = os.getenv(env)
-        if not val:
-            return to_json(Error(f'{env} is not defined on env')._asdict())
-        envs[env] = val
+            res[key] = val
+
+        return res, None
+
+    required_envs = ['AWS_REGION', 'SENDER_EMAIL']
+    envs, err = get_envs(required_envs)
+    if err:
+        return to_json(err)
 
     client = boto3.client('ses', region_name=envs['AWS_REGION'])
 
