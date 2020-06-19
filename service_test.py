@@ -9,10 +9,6 @@ from service import UndefinedEnvsError, PayloadParseError
 from service import get_configs_by_env, parse_message_payload
 
 
-def to_json(obj):
-    return json.dumps(obj)
-
-
 class ParseMessagePayloadUnitTest(TestCase):
     def test_expected_payload_parse_error(self):
         invalid_event = {
@@ -65,22 +61,18 @@ class GetConfigsByEnvUnitTest(TestCase):
         actual = get_configs_by_env()
         self.assertEqual(expected, actual)
 
+    def test_expected_undefined_envs_error_single(self):
+        os.environ['SES_AWS_REGION'] = 'test region'
+
+        expected = UndefinedEnvsError(['SES_SENDER_EMAIL'])
+        with self.assertRaises(UndefinedEnvsError) as ctx:
+            get_configs_by_env()
+
+        self.assertEqual(str(expected), str(ctx.exception))
+
     def test_expected_undefined_envs_error(self):
         expected = UndefinedEnvsError(REQUIRED_ENVS)
         with self.assertRaises(UndefinedEnvsError) as ctx:
             get_configs_by_env()
 
         self.assertEqual(str(expected), str(ctx.exception))
-
-
-class HandlerUnitTest(TestCase):
-    def setUp(self):
-        os.environ.clear()
-
-    # def test_expected_return_error_not_defined_sender_email_env(self):
-    #     os.environ['SES_AWS_REGION'] = 'test'
-
-    #     expected = to_json({"msg": "SES_SENDER_EMAIL is not defined on env"})
-    #     actual = handler({}, None)
-
-    #     self.assertEqual(expected, actual)
