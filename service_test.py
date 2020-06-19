@@ -3,11 +3,38 @@ import json
 
 from unittest import TestCase
 
-from service import handler
+from service import handler, UndefinedEnvsError, REQUIRED_ENVS, Config, get_configs_by_env
 
 
 def to_json(obj):
     return json.dumps(obj)
+
+
+class GetConfigsByEnvUnitTest(TestCase):
+    def setUp(self):
+        os.environ.clear()
+
+    def test_expected_configs(self):
+        expected_region = 'test-region'
+        expected_sender_email = 'test@test.com'
+
+        os.environ['SES_AWS_REGION'] = expected_region
+        os.environ['SES_SENDER_EMAIL'] = expected_sender_email
+
+        expected = Config(
+            ses_aws_region=expected_region,
+            ses_sender_email=expected_sender_email,
+        )
+
+        actual = get_configs_by_env()
+        self.assertEqual(expected, actual)
+
+    def test_expected_undefined_envs_error(self):
+        expected = UndefinedEnvsError(REQUIRED_ENVS)
+        with self.assertRaises(UndefinedEnvsError) as ctx:
+            get_configs_by_env()
+
+        self.assertEqual(str(expected), str(ctx.exception))
 
 
 class HandlerUnitTest(TestCase):
