@@ -1,18 +1,10 @@
 import os
 import json
-from collections import namedtuple
+
 from typing import NamedTuple, List
 
 import boto3
 from botocore.exceptions import ClientError
-
-ALLOWED_TYPES = ['email']
-CHARSET = "UTF-8"
-
-
-RequestPayload = namedtuple(
-    'RequestPayload', ['type', 'to', 'subject', 'html', 'text'])
-Error = namedtuple('ApiError', 'msg')
 
 
 class UndefinedEnvsError(Exception):
@@ -37,10 +29,6 @@ class Payload(NamedTuple):
     subject: str
     html: str
     text: str
-
-
-def to_json(obj):
-    return json.dumps(obj)
 
 
 REQUIRED_ENVS = ['SES_AWS_REGION', 'SES_SENDER_EMAIL']
@@ -81,30 +69,27 @@ def parse_message_payload(event: dict) -> Payload:
     )
 
 
-def handler(event, context):
+def send_email(cfg: Config, msg: Payload) -> None:
+    CHARSET = "UTF-8"
+
+    client = boto3.client('ses', region_name=cfg.ses_aws_region)
+    try:
+        client.send_email(
+            Destination={'ToAddresses': [msg.to]},
+            Message={
+                'Body': {
+                    'Html': {'Charset': CHARSET, 'Data': msg.html},
+                    'Text': {'Charset': CHARSET, 'Data': msg.text},
+                },
+                'Subject': {'Charset': CHARSET, 'Data': msg.subject}},
+            Source=cfg.ses_sender_email,
+        )
+    except ClientError as ex:
+        raise ex
+
+
+def handler(event, context) -> None:
     cfg = get_configs_by_env()
     msg = parse_message_payload(event)
 
-    message_body = json.loads(event['Records'][0]['body'])
-
-    try:
-        req_payload = RequestPayload(**message_body)
-    except TypeError as ex:
-        return to_json(Error('invalid request payload ' + str(ex))._asdict())
-
-    client = boto3.client('ses', region_name=envs['SES_AWS_REGION'])
-    try:
-        client.send_email(
-            Destination={'ToAddresses': [req_payload.to]},
-            Message={
-                'Body': {
-                    'Html': {'Charset': CHARSET, 'Data': req_payload.html},
-                    'Text': {'Charset': CHARSET, 'Data': req_payload.text},
-                },
-                'Subject': {'Charset': CHARSET, 'Data': req_payload.subject}},
-            Source=envs['SES_SENDER_EMAIL'],
-        )
-    except ClientError as ex:
-        return to_json(Error(str(ex))._asdict())
-
-    return None
+    send_email(cfg, msg)

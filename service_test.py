@@ -9,6 +9,10 @@ from service import UndefinedEnvsError, PayloadParseError
 from service import get_configs_by_env, parse_message_payload
 
 
+class SendEmailUnitTest(TestCase):
+    pass
+
+
 class ParseMessagePayloadUnitTest(TestCase):
     def test_expected_payload_parse_error(self):
         invalid_event = {
