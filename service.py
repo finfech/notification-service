@@ -23,9 +23,20 @@ class UndefinedEnvsError(Exception):
         return f'{self.keys} is undefined on env'
 
 
+class PayloadParseError(ValueError):
+    pass
+
+
 class Config(NamedTuple):
     ses_aws_region: str
     ses_sender_email: str
+
+
+class Payload(NamedTuple):
+    to: str
+    subject: str
+    html: str
+    text: str
 
 
 def to_json(obj):
@@ -56,23 +67,23 @@ def get_configs_by_env() -> Config:
     )
 
 
-def get_envs(required_envs):
-    res = dict()
-    for key in required_envs:
-        val = os.getenv(key)
-        if not val:
-            return None, Error(f'{key} is not defined on env')._asdict()
+def parse_message_payload(event: dict) -> Payload:
+    try:
+        body = event['Records'][0]['body']
+    except Exception:
+        raise PayloadParseError()
 
-        res[key] = val
-
-    return res, None
+    return Payload(
+        to=body['to'],
+        subject=body['subject'],
+        html=body['html'],
+        text=body['text'],
+    )
 
 
 def handler(event, context):
-    required_envs = ['SES_AWS_REGION', 'SES_SENDER_EMAIL']
-    envs, err = get_envs(required_envs)
-    if err:
-        return to_json(err)
+    cfg = get_configs_by_env()
+    msg = parse_message_payload(event)
 
     message_body = json.loads(event['Records'][0]['body'])
 
@@ -96,4 +107,4 @@ def handler(event, context):
     except ClientError as ex:
         return to_json(Error(str(ex))._asdict())
 
-    return ""
+    return None
