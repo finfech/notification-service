@@ -5,7 +5,7 @@ from unittest import TestCase
 
 from service import handler, REQUIRED_ENVS
 from service import Config, Payload
-from service import UndefinedEnvsError, PayloadParseError
+from service import UndefinedEnvsError, PayloadParseError, PayloadMissingFieldsError
 from service import get_configs_by_env, parse_message_payload
 
 
@@ -22,6 +22,32 @@ class ParseMessagePayloadUnitTest(TestCase):
         with self.assertRaises(PayloadParseError) as ctx:
             parse_message_payload(invalid_event)
 
+    def test_expected_payload_parse_error_when_invalid_json(self):
+        invalid_event = {
+            'Records': [{
+                'body': "invalid json"
+            }]
+        }
+
+        with self.assertRaises(PayloadParseError) as ctx:
+            parse_message_payload(invalid_event)
+
+    def test_expected_payload_parse_error_when_missing_field(self):
+        invalid_event = {
+            'Records': [{
+                'body': json.dumps({
+                    "to": "test to",
+                    "text": "test text",
+                })
+            }]
+        }
+
+        expected = PayloadMissingFieldsError(['subject', 'html'])
+        with self.assertRaises(PayloadMissingFieldsError) as ctx:
+            parse_message_payload(invalid_event)
+
+        self.assertEqual(str(expected), str(ctx.exception))
+
     def test_expected_parsed_payload(self):
         expected_to = "to@gmail.com"
         expected_subj = "subject test"
@@ -30,12 +56,12 @@ class ParseMessagePayloadUnitTest(TestCase):
 
         fake_event = {
             'Records': [{
-                'body': {
+                'body': json.dumps({
                     "to": expected_to,
                     "subject": expected_subj,
                     "html": expected_html,
                     "text": expected_text,
-                }
+                })
             }]
         }
 

@@ -19,6 +19,14 @@ class PayloadParseError(ValueError):
     pass
 
 
+class PayloadMissingFieldsError(ValueError):
+    def __init__(self, keys):
+        self.keys = keys
+
+    def __str__(self):
+        return f'{self.keys} is missing on json payload'
+
+
 class Config(NamedTuple):
     ses_aws_region: str
     ses_sender_email: str
@@ -57,16 +65,22 @@ def get_configs_by_env() -> Config:
 
 def parse_message_payload(event: dict) -> Payload:
     try:
-        body = event['Records'][0]['body']
+        json_str = event['Records'][0]['body']
+        body = json.loads(json_str)
     except Exception:
         raise PayloadParseError()
 
-    return Payload(
-        to=body['to'],
-        subject=body['subject'],
-        html=body['html'],
-        text=body['text'],
-    )
+    REQUIRED_FIELDS = ['to', 'subject', 'html', 'text']
+
+    missing_fields = []
+    for field in REQUIRED_FIELDS:
+        if field not in body:
+            missing_fields.append(field)
+
+    if missing_fields:
+        raise PayloadMissingFieldsError(missing_fields)
+
+    return Payload(**body)
 
 
 def send_email(cfg: Config, msg: Payload) -> None:
