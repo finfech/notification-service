@@ -1,5 +1,7 @@
 on: [push, pull_request]
 name: Actions CI Workflow
+env:
+  tf_version: 0.12.6
 jobs:
   "UnitTest":
     runs-on: ubuntu-latest
@@ -21,3 +23,25 @@ jobs:
 
       - name: Test Service script
         run: python -m unittest discover -p "*_test.py"
+  "Terraform-Plan":
+    if: ${{ github.ref == 'refs/heads/master' }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: terraform
+    needs:
+      - "UnitTest"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: ${{ env.tf_version }}
+          cli_config_credentials_token: ${{ secrets.TF_TOKEN }}
+
+      - name: Terraform Init
+        run: terraform init -input=false -no-color
+
+      - name: Terraform Plan
+        run: terraform plan -input=false -no-color
