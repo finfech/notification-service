@@ -19,8 +19,8 @@ jobs:
 
       - name: Test Service script
         run: python -m unittest discover -p "*_test.py"
+
   "Terraform-Plan":
-    if: ${{ github.ref == 'refs/heads/master' }}
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -42,13 +42,14 @@ jobs:
       - name: Terraform Plan
         run: terraform plan -input=false -no-color
 
-  "Terraform-Plan":
+  "Terraform-Apply":
+    if: ${{ github.ref == 'refs/heads/master' }}
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: terraform
     needs:
-      - "UnitTest"
+      - "Terraform-Plan"
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
