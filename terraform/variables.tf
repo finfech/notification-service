@@ -2,7 +2,6 @@ variable "aws_region" {
   default = "ap-northeast-2"
 }
 
-
 variable "lambda_function_name" {
   default = "notification-service"
 }
@@ -28,5 +27,5 @@ variable "ses_sender_email" {
 }
 
 variable "commit_hash" {
-  default = "test"
+  type = string
 }
