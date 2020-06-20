@@ -1,7 +1,9 @@
-on: [push, pull_request]
+on: [push]
 name: Actions CI Workflow
 env:
   tf_version: 0.12.26
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 jobs:
   "UnitTest":
     runs-on: ubuntu-latest
@@ -40,7 +42,7 @@ jobs:
         run: terraform init -input=false -no-color
 
       - name: Terraform Plan
-        run: terraform plan -input=false -no-color
+        run: terraform plan -input=false -no-color -var-file config.tfvars -var commit_hash=$(git rev-parse --short HEAD)
 
   "Terraform-Apply":
     if: ${{ github.ref == 'refs/heads/master' }}
@@ -63,4 +65,4 @@ jobs:
         run: terraform init -input=false -no-color
 
       - name: Terraform Apply
-        run: terraform apply -auto-approve -input=false -no-color
+        run: terraform apply -auto-approve -input=false -no-color -var-file config.tfvars -var commit_hash=$(git rev-parse --short HEAD)

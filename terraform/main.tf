@@ -1,4 +1,6 @@
-provider "aws" {}
+provider "aws" {
+  region = var.aws_region
+}
 
 terraform {
   backend "remote" {
@@ -29,6 +31,10 @@ resource "aws_lambda_function" "this" {
       SES_AWS_REGION   = var.ses_aws_region
       SES_SENDER_EMAIL = var.ses_sender_email
     }
+  }
+
+  tags = {
+    Commit = var.commit_hash
   }
 }
 
