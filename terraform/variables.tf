@@ -3,11 +3,15 @@ variable "lambda_function_name" {
 }
 
 variable "lambda_handler_name" {
-  default = "service.handler"
+  default = "app.handler"
 }
 
 variable "lambda_filename" {
-  default = "service.zip"
+  default = "app.zip"
+}
+
+variable "lambda_source_path" {
+  default = "../app.py"
 }
 
 variable "ses_aws_region" {
