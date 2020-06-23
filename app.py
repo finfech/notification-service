@@ -80,7 +80,12 @@ def parse_message_payload(event: dict) -> Payload:
     if missing_fields:
         raise PayloadMissingFieldsError(missing_fields)
 
-    return Payload(**body)
+    return Payload(
+        to=body['to'],
+        subject=body['subject'],
+        html=body['html'],
+        text=body['text'],
+    )
 
 
 def send_email(cfg: Config, msg: Payload) -> None:
