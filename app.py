@@ -47,8 +47,10 @@ class Payload():
     text: str
 
 
+REQUIRED_ENVS = ['SES_AWS_REGION', 'SES_SENDER_EMAIL']
+
+
 def get_configs_by_env() -> Config:
-    REQUIRED_ENVS = ['SES_AWS_REGION', 'SES_SENDER_EMAIL']
     if undefined_envs := [env for env in REQUIRED_ENVS if os.getenv(env) is None]:
         raise UndefinedEnvsError(undefined_envs)
 
