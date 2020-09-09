@@ -1,7 +1,7 @@
 import os
 import json
 
-from typing import NamedTuple, List
+from typing import NamedTuple
 
 import boto3
 from botocore.exceptions import ClientError
@@ -71,13 +71,7 @@ def parse_message_payload(event: dict) -> Payload:
         raise PayloadParseError()
 
     REQUIRED_FIELDS = ['to', 'subject', 'html', 'text']
-
-    missing_fields = []
-    for field in REQUIRED_FIELDS:
-        if field not in body:
-            missing_fields.append(field)
-
-    if missing_fields:
+    if missing_fields := [field for field in REQUIRED_FIELDS if field not in body]:
         raise PayloadMissingFieldsError(missing_fields)
 
     return Payload(
