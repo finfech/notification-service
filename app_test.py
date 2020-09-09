@@ -41,7 +41,7 @@ class ParseRequestUnitTest(TestCase):
             }]
         }
 
-        expected = PayloadMissingFieldsError(['subject', 'html'])
+        expected = PayloadMissingFieldsError(['payload'])
         with self.assertRaises(PayloadMissingFieldsError) as ctx:
             parse_request(invalid_event)
 
