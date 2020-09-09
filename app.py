@@ -1,7 +1,7 @@
 import os
 import json
 
-from typing import NamedTuple, List
+from dataclasses import dataclass
 
 import boto3
 from botocore.exceptions import ClientError
@@ -27,88 +27,93 @@ class PayloadMissingFieldsError(ValueError):
         return f'{self.keys} is missing on json payload'
 
 
-class Config(NamedTuple):
+@dataclass
+class Config:
     ses_aws_region: str
     ses_sender_email: str
 
 
-class Payload(NamedTuple):
-    to: str
-    subject: str
-    html: str
-    text: str
+@dataclass
+class Req:
+    type: str
+    payload: str
 
 
 REQUIRED_ENVS = ['SES_AWS_REGION', 'SES_SENDER_EMAIL']
 
 
 def get_configs_by_env() -> Config:
-    envs = dict()
-    undefined_envs = list()
-
-    for key in REQUIRED_ENVS:
-        val = os.getenv(key)
-        if not val:
-            undefined_envs.append(key)
-            continue
-
-        envs[key] = val
-
-    if undefined_envs:
+    if undefined_envs := [env for env in REQUIRED_ENVS if os.getenv(env) is None]:
         raise UndefinedEnvsError(undefined_envs)
 
     return Config(
-        ses_aws_region=envs['SES_AWS_REGION'],
-        ses_sender_email=envs['SES_SENDER_EMAIL'],
+        ses_aws_region=os.getenv('SES_AWS_REGION'),
+        ses_sender_email=os.getenv('SES_SENDER_EMAIL'),
     )
 
 
-def parse_message_payload(event: dict) -> Payload:
+def parse_request(event: dict) -> Req:
     try:
         json_str = event['Records'][0]['body']
         body = json.loads(json_str)
     except Exception:
         raise PayloadParseError()
 
-    REQUIRED_FIELDS = ['to', 'subject', 'html', 'text']
-
-    missing_fields = []
-    for field in REQUIRED_FIELDS:
-        if field not in body:
-            missing_fields.append(field)
-
-    if missing_fields:
+    REQUIRED_FIELDS = ['type', 'payload']
+    if missing_fields := [field for field in REQUIRED_FIELDS if field not in body]:
         raise PayloadMissingFieldsError(missing_fields)
 
-    return Payload(
-        to=body['to'],
-        subject=body['subject'],
-        html=body['html'],
-        text=body['text'],
-    )
+    return Req(body['type'], body['payload'])
 
 
-def send_email(cfg: Config, msg: Payload) -> None:
-    CHARSET = "UTF-8"
+CHARSET = "UTF-8"
+
+
+def email_handler(cfg: Config, payload) -> None:
+    try:
+        to = payload['to'],
+        subject = payload['subject'],
+        html = payload['html'],
+        text = payload['text'],
+    except Exception:
+        raise PayloadParseError()
 
     client = boto3.client('ses', region_name=cfg.ses_aws_region)
     try:
         client.send_email(
-            Destination={'ToAddresses': [msg.to]},
+            Destination={'ToAddresses': [to]},
             Message={
                 'Body': {
-                    'Html': {'Charset': CHARSET, 'Data': msg.html},
-                    'Text': {'Charset': CHARSET, 'Data': msg.text},
+                    'Html': {'Charset': CHARSET, 'Data': html},
+                    'Text': {'Charset': CHARSET, 'Data': text},
                 },
-                'Subject': {'Charset': CHARSET, 'Data': msg.subject}},
+                'Subject': {'Charset': CHARSET, 'Data': subject}},
             Source=cfg.ses_sender_email,
         )
     except ClientError as ex:
         raise ex
 
 
-def handler(event, context) -> None:
-    cfg = get_configs_by_env()
-    msg = parse_message_payload(event)
+def sms_handler(cfg: Config, payload) -> None:
+    pass
 
-    send_email(cfg, msg)
+
+def slack_handler(cfg: Config, payload) -> None:
+    pass
+
+
+def handler(event, context) -> None:
+    handlers = {
+        'email': email_handler,
+        'slack': slack_handler,
+        'sms': sms_handler,
+    }
+
+    cfg = get_configs_by_env()
+    req = parse_request(event)
+
+    action = handlers.get(req.type)
+    if action is None:
+        raise Exception('Not support notification type')
+
+    action(cfg, req.payload)

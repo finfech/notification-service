@@ -3,26 +3,26 @@ import json
 
 from unittest import TestCase
 
-from app import handler, REQUIRED_ENVS
-from app import Config, Payload
+from app import REQUIRED_ENVS, parse_request
+from app import Config, Req
 from app import UndefinedEnvsError, PayloadParseError, PayloadMissingFieldsError
-from app import get_configs_by_env, parse_message_payload
+from app import get_configs_by_env
 
 
 class SendEmailUnitTest(TestCase):
     pass
 
 
-class ParseMessagePayloadUnitTest(TestCase):
-    def test_expected_payload_parse_error(self):
+class ParseRequestUnitTest(TestCase):
+    def test_expected_req_parse_error(self):
         invalid_event = {
             ''
         }
 
         with self.assertRaises(PayloadParseError) as ctx:
-            parse_message_payload(invalid_event)
+            parse_request(invalid_event)
 
-    def test_expected_payload_parse_error_when_invalid_json(self):
+    def test_expected_req_parse_error_when_invalid_json(self):
         invalid_event = {
             'Records': [{
                 'body': "invalid json"
@@ -30,44 +30,38 @@ class ParseMessagePayloadUnitTest(TestCase):
         }
 
         with self.assertRaises(PayloadParseError) as ctx:
-            parse_message_payload(invalid_event)
+            parse_request(invalid_event)
 
-    def test_expected_payload_parse_error_when_missing_field(self):
+    def test_expected_req_parse_error_when_missing_field(self):
         invalid_event = {
             'Records': [{
                 'body': json.dumps({
-                    "to": "test to",
-                    "text": "test text",
+                    "type": "email",
                 })
             }]
         }
 
-        expected = PayloadMissingFieldsError(['subject', 'html'])
+        expected = PayloadMissingFieldsError(['payload'])
         with self.assertRaises(PayloadMissingFieldsError) as ctx:
-            parse_message_payload(invalid_event)
+            parse_request(invalid_event)
 
         self.assertEqual(str(expected), str(ctx.exception))
 
-    def test_expected_parsed_payload(self):
-        expected_to = "to@gmail.com"
-        expected_subj = "subject test"
-        expected_html = "test html"
-        expected_text = "test text"
+    def test_expected_parsed_req(self):
+        expected_type = "email"
+        expected_payload = "payload"
 
         fake_event = {
             'Records': [{
                 'body': json.dumps({
-                    "to": expected_to,
-                    "subject": expected_subj,
-                    "html": expected_html,
-                    "text": expected_text,
+                    "type": expected_type,
+                    "payload": expected_payload,
                 })
             }]
         }
 
-        expected = Payload(to=expected_to, subject=expected_subj,
-                           html=expected_html, text=expected_text)
-        actual = parse_message_payload(fake_event)
+        expected = Req(type=expected_type, payload=expected_payload)
+        actual = parse_request(fake_event)
 
         self.assertEqual(expected, actual)
 
