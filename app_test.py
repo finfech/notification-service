@@ -3,10 +3,10 @@ import json
 
 from unittest import TestCase
 
-from app import handler, REQUIRED_ENVS, parse_request
-from app import Config, Payload, Req
+from app import REQUIRED_ENVS, parse_request
+from app import Config, Req
 from app import UndefinedEnvsError, PayloadParseError, PayloadMissingFieldsError
-from app import get_configs_by_env, parse_message_payload
+from app import get_configs_by_env
 
 
 class SendEmailUnitTest(TestCase):
