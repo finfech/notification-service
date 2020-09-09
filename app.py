@@ -71,17 +71,17 @@ CHARSET = "UTF-8"
 
 def email_handler(cfg: Config, payload) -> None:
     try:
-        to = payload['to'],
-        subject = payload['subject'],
-        html = payload['html'],
-        text = payload['text'],
+        to = list(payload['to']),
+        subject = str(payload['subject']),
+        html = str(payload['html']),
+        text = str(payload['text']),
     except Exception:
         raise PayloadParseError()
 
     client = boto3.client('ses', region_name=cfg.ses_aws_region)
     try:
         client.send_email(
-            Destination={'ToAddresses': [to]},
+            Destination={'ToAddresses': to},
             Message={
                 'Body': {
                     'Html': {'Charset': CHARSET, 'Data': html},
