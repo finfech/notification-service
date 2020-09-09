@@ -39,14 +39,6 @@ class Req:
     payload: str
 
 
-@dataclass
-class Payload():
-    to: str
-    subject: str
-    html: str
-    text: str
-
-
 REQUIRED_ENVS = ['SES_AWS_REGION', 'SES_SENDER_EMAIL']
 
 
