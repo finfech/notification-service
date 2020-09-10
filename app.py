@@ -70,11 +70,17 @@ CHARSET = "UTF-8"
 
 
 def email_handler(cfg: Config, payload) -> None:
+    print(payload, type(payload))
+
     try:
         to = list(payload['to']),
         subject = str(payload['subject']),
         html = str(payload['html']),
         text = str(payload['text']),
+        print(to, type(to))
+        print(subject, type(subject))
+        print(html, type(html))
+        print(text, type(text))
     except Exception:
         raise PayloadParseError()
 
@@ -102,17 +108,18 @@ def slack_handler(cfg: Config, payload) -> None:
     pass
 
 
-def handler(event, context) -> None:
-    handlers = {
-        'email': email_handler,
-        'slack': slack_handler,
-        'sms': sms_handler,
-    }
+HANDLERS = {
+    'email': email_handler,
+    'slack': slack_handler,
+    'sms': sms_handler,
+}
 
+
+def handler(event, context) -> None:
     cfg = get_configs_by_env()
     req = parse_request(event)
 
-    action = handlers.get(req.type)
+    action = HANDLERS.get(req.type)
     if action is None:
         raise Exception('Not support notification type')
 
