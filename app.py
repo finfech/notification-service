@@ -70,17 +70,11 @@ CHARSET = "UTF-8"
 
 
 def email_handler(cfg: Config, payload) -> None:
-    print(payload, type(payload))
-
     try:
-        to = list(payload['to']),
-        subject = str(payload['subject']),
-        html = str(payload['html']),
-        text = str(payload['text']),
-        print(to, type(to))
-        print(subject, type(subject))
-        print(html, type(html))
-        print(text, type(text))
+        to = list(payload['to'])
+        subject = str(payload['subject'])
+        html = str(payload['html'])
+        text = str(payload['text'])
     except Exception:
         raise PayloadParseError()
 
